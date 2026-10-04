@@ -74,6 +74,35 @@ buttons grey out and the hint line says why.
 
 ---
 
+## Microphone and two hands
+
+The mic hears through a single pitch tracker (the McLeod Pitch Method, in the
+`pitch detection` section of `index.html`), which can only follow **one** note at a time.
+That matters most for the very common case of two hands playing the **same letter an
+octave apart** — a scale practiced hands-together, or a Hard-mode left hand that happens
+to land on the same note name as the melody.
+
+Acoustically, that case is a dead end for pitch detection: a note and its own octave,
+played together, produce a sound wave with *no periodicity the lower note doesn't already
+have* — there is nothing left for a second detector to find, no matter how clever. So the
+fix lives in the judging logic instead of in pitch detection: in `input()`, when a detected
+note matches more than one still-owed note in the current chord (same letter, different
+octave), **all of them are credited at once**, not just the first. This is what actually
+makes two-hand octave practice (like the C major scale with both hands) work — it isn't
+pretending to hear two notes, it's recognizing that one reading can't help but mean both.
+
+This only fires for notes that share a letter name. Two hands playing genuinely
+**different** notes together (e.g. a left-hand G under a right-hand E) are still only ever
+tracked as one note, because a single pitch tracker truly cannot separate them reliably —
+an earlier attempt at a "second pitch" heuristic was tested and dropped (see
+`Verifying changes`) after it turned out to mistake a single note's own harmonics for a
+second note. In practice this is rarely a problem: real hands are never struck in
+perfect, microsecond sync, so the tracker usually catches both notes in quick succession
+anyway. If a specific chord is consistently only half-registering, lowering **Mic
+sensitivity** or slightly staggering the hands is the practical fix.
+
+---
+
 ## Song format
 
 Songs are plain objects in the `BUILTIN` array (see the `/* ---------- songs ---------- */`
@@ -127,6 +156,11 @@ banner in `index.html`).
 For one-off or personal songs there is no need to touch the code at all — the
 **+ Add your own song** button in the library takes a title, a bpm, the notes and an
 optional chord track, and stores it in the browser under *My songs*.
+
+A few library entries (Disney tunes, the two Star Wars themes) are **simplified personal
+arrangements** of well-known melodies, not verbatim transcriptions — they're there for
+this family's practice, not for publishing or distributing. Their titles say
+"(simplified)" to keep that honest; keep that label on anything similar you add.
 
 ---
 
@@ -200,6 +234,15 @@ for(const s of m.BUILTIN){
 queue) to play every song in every mode at every level and catch runtime errors. That is
 how this version was checked.
 
+**Pitch detection** — `mpm()` can be called directly from Node with a synthetic waveform
+(sum of a few sine harmonics, same shape as the app's own `tone()` synth) to check what it
+reports for a given pitch or mix of pitches, without a mic or a browser. This is how the
+two-hand fix was designed: a synthetic test of two notes an octave apart confirmed the
+combined wave really does carry no extra information (so the fix belongs in the judging
+logic, not the detector), and a synthetic test of a *single* note caught an earlier
+"second pitch" heuristic mistaking that note's own harmonics for a second note, which is
+why that heuristic isn't in here.
+
 Always also open it in a real browser afterwards: the canvas rendering, touch targets and
 microphone can only really be judged by eye and ear.
 
@@ -207,9 +250,14 @@ microphone can only really be judged by eye and ear.
 
 ## Known limits and ideas
 
-* **Monophonic ear.** The pitch detector hears one note at a time. Chords on Medium and
-  Hard are tracked note by note; playing both hands at exactly the same instant may only
-  register one. Tapping the on-screen keys, or Read mode's letter pad, is unambiguous.
+* **Monophonic ear.** The pitch detector hears one note at a time. Two hands on the
+  **same letter** (an octave apart) are credited together regardless, since one reading
+  can't mean anything else — see *Microphone and two hands* above. Two hands on
+  **genuinely different** notes at the exact same instant are still only tracked as one;
+  this is rarely an issue in practice since real playing is never perfectly
+  synchronized, but a borderline chord can be nudged by lowering Mic sensitivity,
+  staggering the hands slightly, or tapping the on-screen keys / Read mode's letter pad,
+  which are unambiguous either way.
 * **Rhythm is not graded in Read mode.** It waits for the right pitch and ignores timing.
   Note *values* are drawn (filled, hollow, flagged) but not judged.
 * **Clef glyphs** come from the system font (`𝄞`, `𝄢`). If no font on the device has them

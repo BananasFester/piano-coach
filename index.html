@@ -318,6 +318,12 @@ const BUILTIN=[
   {id:'twinkle',title:'Twinkle Twinkle Little Star',tier:'Starter',bpm:84,bpb:4,
    rh:'C4 C4 G4 G4 A4 A4 G4:2 F4 F4 E4 E4 D4 D4 C4:2 G4 G4 F4 F4 E4 E4 D4:2 G4 G4 F4 F4 E4 E4 D4:2 C4 C4 G4 G4 A4 A4 G4:2 F4 F4 E4 E4 D4 D4 C4:2',
    chords:'C:4 F:2 C:2 F:2 C:2 G:2 C:2 C:2 F:2 C:2 G:2 C:2 F:2 C:2 G:2 C:4 F:2 C:2 F:2 C:2 G:2 C:2'},
+  {id:'smallworld',title:"It's a Small World",tier:'Starter',bpm:100,bpb:4,
+   rh:'C4 D4 E4 F4 G4:2 E4:2 C4 D4 E4 F4 G4:4 C4 D4 E4 F4 G4:2 E4:2 C4 D4 E4 F4 G4:4',
+   chords:'C:4 C:4 F:4 C:4 C:4 C:4 F:4 C:4'},
+  {id:'heighho',title:'Heigh-Ho (Snow White)',tier:'Starter',bpm:112,bpb:4,
+   rh:'C4 C4 C4 E4 G4:2 E4:2 C4 C4 C4 E4 G4:4 G4 G4 A4 G4 F4 E4 D4 C4 D4 E4 F4 G4 C4:4',
+   chords:'C:4 C:4 G7:4 C:4 F:4 C:4 G7:4 C:4'},
 
   /* ---- Beginner ---- */
   {id:'gscale',title:'G Major Scale',tier:'Beginner',bpm:72,bpb:4,
@@ -350,6 +356,21 @@ const BUILTIN=[
   {id:'lhwalk',title:'Left-Hand Walk',tier:'Beginner',bpm:80,bpb:4,
    rh:'G4:4 G4:4 A4:4 G4:4 F4:4 E4:4 D4:4 C4:4',
    chords:'C:4 C:4 F:4 C:4 F:4 C:4 G7:4 C:4'},
+  {id:'newworld',title:'A Whole New World (Aladdin, simplified)',tier:'Beginner',bpm:84,bpb:4,
+   rh:'E4 F4 G4:2 G4 A4 G4:2 F4 E4 D4:2 C4:4 E4 F4 G4:2 A4 G4 F4:2 E4 D4 C4 D4 C4:4',
+   chords:'C:4 F:4 G7:4 C:4 C:4 F:4 G7:4 C:4'},
+  {id:'friendinme',title:"You've Got a Friend in Me (Toy Story, simplified)",tier:'Beginner',bpm:104,bpb:4,
+   rh:'D4 D4 D4 E4 F#4 G4:2 E4 D4 D4 C4 B3 A3:4 D4 E4 F#4 G4 A4 G4:2 F#4 E4 D4 C4 B3 G4:4',
+   chords:'G:4 D:4 Em:4 C:4 G:4 D:4 Em:4 C:4'},
+  {id:'wishstar',title:'When You Wish Upon a Star (simplified)',tier:'Beginner',bpm:84,bpb:4,
+   rh:'G4 C5:2 B4 A4 G4:2 F4 E4 D4 C4:2 C4:4 G4 C5:2 B4 A4 G4 F4 E4 D4 E4 F4:2 C4:4',
+   chords:'C:4 G7:4 C:4 C:4 C:4 G7:4 C:4 C:4'},
+  {id:'beauty',title:'Beauty and the Beast (simplified)',tier:'Beginner',bpm:96,bpb:3,
+   rh:'C4 D4 E4 F4 E4 D4 C4:2 D4 E4:3 E4 F4 G4 A4 G4 F4 E4:2 D4 C4:3',
+   chords:'C:3 F:3 C:3 G:3 C:3 F:3 G:3 C:3'},
+  {id:'swmain',title:'Star Wars (Main Theme, simplified)',tier:'Beginner',bpm:104,bpb:4,
+   rh:'C5:2 G4:2 C5:2 G4:1 F4:1 E4:1 D4:1 C4:2 C4:4 C5:2 G4:2 C5:2 G4:1 F4:1 D4:1 E4:1 D4:1 C4:1 C4:4',
+   chords:'C:4 C:4 G7:4 C:4 C:4 C:4 G7:4 C:4'},
 
   /* ---- Intermediate ---- */
   {id:'aminor',title:'A Minor Scale',tier:'Intermediate',bpm:72,bpb:4,
@@ -369,7 +390,16 @@ const BUILTIN=[
    chords:'Am:7 E:3 Am:7.5'},
   {id:'minuet',title:'Minuet in G (opening)',tier:'Intermediate',bpm:120,bpb:3,
    rh:'D5 G4:0.5 A4:0.5 B4:0.5 C5:0.5 D5 G4 G4 E5 C5:0.5 D5:0.5 E5:0.5 F#5:0.5 G5 G4 G4 C5 D5:0.5 C5:0.5 B4:0.5 A4:0.5 B4 C5:0.5 B4:0.5 A4:0.5 G4:0.5 F#4 G4:0.5 A4:0.5 B4:0.5 G4:0.5 A4:2 R',
-   chords:'G:3 G:3 C:3 G:3 C:3 G:3 D7:3 D7:3'}
+   chords:'G:3 G:3 C:3 G:3 C:3 G:3 D7:3 D7:3'},
+  {id:'hakuna',title:'Hakuna Matata (Lion King, simplified)',tier:'Intermediate',bpm:120,bpb:4,
+   rh:'C4 C4 D4 E4 F4:0.5 G4:0.5 F4 E4 D4 C4 C4 D4 E4 D4:2 C4:2 E4 E4 F4 G4 A4:0.5 G4:0.5 F4 E4 D4 C4 E4 G4 E4 C4:4',
+   chords:'C:4 F:4 C:4 G7:4 C:4 F:4 G7:4 C:4'},
+  {id:'letitgo',title:'Let It Go (Frozen, simplified)',tier:'Intermediate',bpm:92,bpb:4,
+   rh:'A4 A4 A4 A4 G4 G4 F4 E4 D4 E4 F4:2 E4:4 C5 C5 B4 A4 G4 A4 B4:2 C5 B4 A4:2 A4:4',
+   chords:'Am:4 Am:4 F:4 Em:4 C:4 F:4 G:4 Am:4'},
+  {id:'swimperial',title:'The Imperial March (Star Wars, simplified)',tier:'Intermediate',bpm:104,bpb:4,
+   rh:'G4 G4 G4 Eb4:1.5 Bb4:0.5 G4 Eb4:1.5 Bb4:0.5 G4:2 G4 G4 G4 Eb4:1.5 Bb4:0.5 G4 Eb4:1.5 Bb4:0.5 G4:2',
+   chords:'Gm:10 Gm:10'}
 ];
 let custom=store.get('songs',[]);
 
@@ -600,6 +630,10 @@ function input(midi,src){
     if(n){
       n.state='hit'; S.correct++; S.streak++; S.bestStreak=Math.max(S.bestStreak,S.streak);
       S.heardOk=true; flash(n.midi,'good');
+      /* One mic reading can't tell "just this note" from "this note doubled an
+         octave away in the other hand" apart -- so if another still-owed note
+         in the chord shares the same letter, credit it too. */
+      for(const other of grp.notes) if(other!==n&&other.state!=='hit'&&match(n.midi,other.midi)){ other.state='hit'; S.correct++; flash(other.midi,'good'); }
       if(grp.notes.every(x=>x.state==='hit')) S.gi++;   /* both hands land before we move on */
     }else{ S.wrong++; S.streak=0; S.heardOk=false; flash(midi,'bad'); }
   }else if(S.mode==='play'){
@@ -617,6 +651,16 @@ function input(midi,src){
       perfect?S.perfect++:S.good++; S.streak++; S.bestStreak=Math.max(S.bestStreak,S.streak);
       S.heardOk=true; flash(best.midi,'good');
       S.popup={text:perfect?'Perfect':(best.start>te?'Early':'Late'),t:now,ok:perfect};
+      /* Same-letter sibling on the very same beat (the other hand playing the
+         same note name an octave away) -- credit it too; see the Learn/Read
+         note above for why a single pitch reading can't tell them apart. */
+      for(const n of S.notes){
+        if(n.start-te>goodW) break;
+        if(n===best||n.state) continue;
+        if(Math.abs(n.start-best.start)>1e-6) continue;
+        const d=Math.abs(n.start-te);
+        if(d<=goodW&&match(best.midi,n.midi)){ n.state='hit'; if(d<=perfW) S.perfect++; else S.good++; flash(n.midi,'good'); }
+      }
     }else{ S.wrong++; S.streak=0; S.heardOk=false; flash(midi,'bad'); }
   }
 }
