@@ -132,6 +132,11 @@ label.field textarea{font-family:ui-monospace,Menlo,Consolas,monospace;font-size
 .setting > div{min-width:0}
 .setting p{margin:2px 0 0;font-size:.82rem;color:var(--muted)}
 .setting input[type=range]{width:140px;accent-color:var(--accent)}
+.handrow{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px 14px}
+.handrow .lbl2{font-weight:700;font-size:.92rem;min-width:0}
+.handrow .lbl2 small{display:block;font-weight:400;color:var(--muted);font-size:.78rem;margin-top:1px}
+.handrow input[type=range]{flex:none;width:130px;accent-color:var(--accent);margin:0 2px}
+.handrow input[type=range]:disabled{opacity:.4}
 .setting input[type=checkbox]{width:24px;height:24px;accent-color:var(--accent);flex:none}
 .val{font-variant-numeric:tabular-nums;color:var(--muted);font-size:.85rem}
 /* ---------- Difficulty + reading pad ---------- */
@@ -164,16 +169,20 @@ label.field textarea{font-family:ui-monospace,Menlo,Consolas,monospace;font-size
     <div class="brand"><span class="brand-mark" aria-hidden="true"></span><h1>Piano Coach</h1></div>
     <button class="ghost" id="settingsBtn1">Settings</button>
   </div>
-  <p class="lede">Pick a difficulty, then pick a song. <strong>Learn</strong> waits on each note, <strong>Play</strong> keeps the beat and scores you, <strong>Read</strong> shows real sheet music with no keyboard, and <strong>Listen</strong> plays the tune first.</p>
+  <p class="lede">Pick a difficulty and whether to add the left hand, then pick a song. <strong>Learn</strong> waits on each note, <strong>Play</strong> keeps the beat and scores you, <strong>Read</strong> shows real sheet music with no keyboard, and <strong>Listen</strong> plays the tune first.</p>
   <div class="tip" id="secureTip" hidden><strong>Microphone is off on this page.</strong> Phones only allow the mic on a secure (https) web address. You can still tap the keys on screen to try everything out.</div>
   <div class="lib-lvl">
     <p class="section-label">Difficulty</p>
     <div class="lvl" id="libLvl" role="tablist">
-      <button role="tab" data-level="easy" aria-selected="true">Easy<small>Right hand</small></button>
-      <button role="tab" data-level="medium" aria-selected="false">Medium<small>+ Left hand</small></button>
-      <button role="tab" data-level="hard" aria-selected="false">Hard<small>Both hands</small></button>
+      <button role="tab" data-level="easy" aria-selected="true">Easy<small>Slower, simpler</small></button>
+      <button role="tab" data-level="medium" aria-selected="false">Medium<small>Normal speed</small></button>
+      <button role="tab" data-level="hard" aria-selected="false">Hard<small>Full speed</small></button>
     </div>
     <p class="tip" id="lvlTip"></p>
+    <div class="handrow">
+      <span class="lbl2">Left hand<small id="libHandSub">Off — melody only</small></span>
+      <input type="range" id="libHand" min="0" max="2" step="1" value="0" aria-label="Left hand amount">
+    </div>
   </div>
   <div class="songs" id="songList"></div>
   <p class="section-label" id="myLabel" hidden>My songs</p>
@@ -217,9 +226,13 @@ label.field textarea{font-family:ui-monospace,Menlo,Consolas,monospace;font-size
       <button role="tab" data-mode="listen" aria-selected="false">Listen</button>
     </div>
     <div class="lvl" id="pLvl" role="tablist">
-      <button role="tab" data-level="easy" aria-selected="true">Easy<small>Right hand</small></button>
-      <button role="tab" data-level="medium" aria-selected="false">Medium<small>+ Left hand</small></button>
-      <button role="tab" data-level="hard" aria-selected="false">Hard<small>Both hands</small></button>
+      <button role="tab" data-level="easy" aria-selected="true">Easy<small>Slower, simpler</small></button>
+      <button role="tab" data-level="medium" aria-selected="false">Medium<small>Normal speed</small></button>
+      <button role="tab" data-level="hard" aria-selected="false">Hard<small>Full speed</small></button>
+    </div>
+    <div class="handrow">
+      <span class="lbl2">Left hand<small id="pHandSub">Off — melody only</small></span>
+      <input type="range" id="pHand" min="0" max="2" step="1" value="0" aria-label="Left hand amount">
     </div>
     <div class="row">
       <div class="tempo"><button id="slower" aria-label="Slower">−</button><span id="tempoVal">100%<small>speed</small></span><button id="faster" aria-label="Faster">+</button></div>
@@ -455,12 +468,13 @@ function parseChords(str){
   return out;
 }
 const BASS=48; /* C3 - where the left hand lives */
-function buildLH(chords,level,bpb,maxBeat){
+/* style: 'simple' (one held root per bar) or 'full' (a moving broken chord). */
+function buildLH(chords,style,bpb,maxBeat){
   const out=[];
   for(const c of chords){
     if(c.start>=maxBeat-1e-6) break;
     const root=BASS+c.pc, end=Math.min(c.start+c.dur,maxBeat);
-    if(level==='medium'){
+    if(style==='simple'){
       /* one held note per bar: the chord root */
       for(let b=c.start;b<end-1e-6;){ const d=Math.min(bpb,end-b); out.push({midi:root,start:b,dur:d}); b+=d; }
     }else{
@@ -476,13 +490,36 @@ function buildLH(chords,level,bpb,maxBeat){
   }
   return out;
 }
-/* Turns a song plus a difficulty into the notes we actually play. */
-function buildSong(s,level){
+/* Difficulty levels and what each does to the RIGHT HAND melody: grid is the
+   beat resolution kept (notes that don't start on the grid are dropped, and
+   the note before them is held longer to cover the gap -- no pitch is ever
+   invented, busy spots are just thinned out), tempoMult scales the song's
+   authored bpm as a gentler default. Hand count is a completely separate
+   choice (see leftHand) -- difficulty never adds or removes a hand. */
+const LEVEL_CFG={easy:{grid:1,tempoMult:0.75},medium:{grid:0.5,tempoMult:0.9},hard:{grid:0,tempoMult:1}};
+function simplifyRH(notes,len,level){
+  const grid=LEVEL_CFG[level].grid;
+  if(!grid) return notes.map(n=>({...n}));
+  const EPS=1e-6,kept=[];
+  for(const n of notes){
+    const onGrid=Math.abs(n.start/grid-Math.round(n.start/grid))<EPS;
+    if(onGrid||!kept.length) kept.push({...n});
+  }
+  for(let i=0;i<kept.length;i++){
+    const nextStart=i+1<kept.length?kept[i+1].start:len;
+    kept[i].dur=Math.max(kept[i].dur,nextStart-kept[i].start);
+  }
+  return kept;
+}
+/* Turns a song plus a difficulty AND a left-hand choice into the notes we
+   actually play. leftHand is 'off' | 'simple' | 'full'. */
+function buildSong(s,level,leftHand){
   const rh=parseSong(s.rh||s.notes);
-  const notes=rh.notes.map(n=>({midi:n.midi,start:n.start,dur:n.dur,hand:'R',state:null}));
-  if(level!=='easy'&&s.chords){
+  const simplified=simplifyRH(rh.notes,rh.len,level);
+  const notes=simplified.map(n=>({midi:n.midi,start:n.start,dur:n.dur,hand:'R',state:null}));
+  if(leftHand!=='off'&&s.chords){
     try{
-      for(const n of buildLH(parseChords(s.chords),level,s.bpb||4,rh.len))
+      for(const n of buildLH(parseChords(s.chords),leftHand,s.bpb||4,rh.len))
         notes.push({midi:n.midi,start:n.start,dur:n.dur,hand:'L',state:null});
     }catch(e){/* a song with unreadable chords just stays one-handed */}
   }
@@ -505,10 +542,11 @@ const match=(a,b)=>settings.anyOctave?(a%12===b%12):a===b;
 
 /* ---------- state ---------- */
 const S={song:null,notes:[],groups:[],len:0,bpb:4,
-  mode:store.get('mode','learn'),level:store.get('level','easy'),tempo:store.get('tempo',100),
+  mode:store.get('mode','learn'),level:store.get('level','easy'),leftHand:store.get('leftHand','off'),
+  tempo:store.get('tempo',100),
   running:false,paused:false,done:false,t:0,gi:0,correct:0,wrong:0,perfect:0,good:0,miss:0,streak:0,bestStreak:0,
   flash:{},heard:null,heardAt:0,heardOk:null,popup:null,ignoreMicUntil:0,lastTap:null,startWall:0};
-const bpm=()=>S.song.bpm*S.tempo/100;
+const bpm=()=>S.song.bpm*S.tempo/100*LEVEL_CFG[S.level].tempoMult;
 
 /* ---------- audio ---------- */
 let actx=null;
@@ -959,9 +997,19 @@ const HINTS={learn:'The song waits on each note until you play it.',
   listen:'Hear how the song goes before you try it.'};
 const MODENAME={learn:'Learn',play:'Play',read:'Read',listen:'Listen'};
 const LVLNAME={easy:'Easy',medium:'Medium',hard:'Hard'};
-const LVLTIP={easy:'Easy \u2014 right hand only, one note at a time.',
-  medium:'Medium \u2014 right hand plus one held left-hand note per bar.',
-  hard:'Hard \u2014 right hand plus a moving left-hand part. Blue notes belong to the left hand.'};
+const LVLTIP={easy:'Easy \u2014 slower, and the trickiest little notes are smoothed into longer, simpler ones.',
+  medium:'Medium \u2014 normal speed, with just the busiest spots smoothed out.',
+  hard:'Hard \u2014 full speed, every note exactly as written.'};
+const HAND_VALS=['off','simple','full'];
+const HANDTIP={off:'Off \u2014 right hand melody only.',
+  simple:'Simple \u2014 adds one held left-hand note per bar.',
+  full:'Full \u2014 adds a moving left-hand part. Blue notes belong to the left hand.'};
+function syncHandUI(){
+  const idx=HAND_VALS.indexOf(S.leftHand);
+  const lib=$('#libHand'),pr=$('#pHand');
+  if(lib) lib.value=idx; if(pr) pr.value=idx;
+  if($('#libHandSub')) $('#libHandSub').textContent=HANDTIP[S.leftHand];
+}
 function showMsg(txt){ const m=$('#stageMsg'); m.textContent=txt; m.hidden=false; }
 function refreshStageMsg(){
   if(!S.song) return;
@@ -975,14 +1023,14 @@ function refreshStageMsg(){
 function updateButtons(){
   $('#startBtn').textContent=!S.running?'Start':(S.paused?'Resume':'Pause');
   document.querySelectorAll('.seg button').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.mode===S.mode)));
+  document.querySelectorAll('#pLvl button').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.level===S.level)));
   const twoOK=!!(S.song&&S.song.chords);
-  document.querySelectorAll('#pLvl button').forEach(b=>{
-    b.setAttribute('aria-selected',String(b.dataset.level===S.level));
-    b.disabled=b.dataset.level!=='easy'&&!twoOK;
-  });
+  $('#pHand').disabled=!twoOK;
+  $('#pHandSub').textContent=twoOK?HANDTIP[S.leftHand]:'This song has no left-hand part yet.';
+  syncHandUI();
   $('#pad').hidden=S.mode!=='read';
   let hint=HINTS[S.mode];
-  if(S.level!=='easy'&&!twoOK) hint+=' This song has no left-hand part yet, so it stays right hand only.';
+  if(S.leftHand!=='off'&&!twoOK) hint+=' This song has no left-hand part yet, so it stays right hand only.';
   $('#modeHint').textContent=hint;
   if(S.song) $('#tempoVal').innerHTML=S.tempo+'%<small>'+Math.round(bpm())+' bpm</small>';
 }
@@ -1014,7 +1062,7 @@ function finish(){
     const secs=Math.round((performance.now()-S.startWall)/1000);
     grid=[['Notes',total],['Wrong keys',S.wrong],['Best streak',S.bestStreak],['Time',Math.floor(secs/60)+':'+String(secs%60).padStart(2,'0')]];
   }
-  const key=S.song.id+'_'+S.mode+'_'+S.level, bests=store.get('best',{}), prevBest=bests[key];
+  const key=S.song.id+'_'+S.mode+'_'+S.level+'_'+S.leftHand, bests=store.get('best',{}), prevBest=bests[key];
   const isBest=prevBest==null||pct>prevBest;
   if(isBest){bests[key]=pct;store.set('best',bests);}
   const stars=pct>=95?3:pct>=80?2:pct>=60?1:0;
@@ -1034,7 +1082,7 @@ function finish(){
 function setMode(m){ S.mode=m; store.set('mode',m); reset(); }
 /* Rebuild the arrangement for the song that is open. */
 function applyLevel(){
-  const b=buildSong(S.song,S.level);
+  const b=buildSong(S.song,S.level,S.leftHand);
   S.notes=b.notes; S.len=b.len; S.groups=b.groups;
   if(CW) layoutKeys(CW);
   reset();
@@ -1044,11 +1092,16 @@ function setLevel(l){
   if(S.song){ applyLevel(); } else { updateButtons(); }
   renderLibrary();
 }
+function setLeftHand(h){
+  S.leftHand=h; store.set('leftHand',h);
+  if(S.song){ applyLevel(); } else { updateButtons(); }
+  renderLibrary();
+}
 
 /* ---------- library ---------- */
 function songMeta(s){
   try{
-    const b=buildSong(s,S.level), ms=b.notes.map(n=>n.midi);
+    const b=buildSong(s,S.level,S.leftHand), ms=b.notes.map(n=>n.midi);
     return b.notes.length+' notes \u00b7 '+(b.twoHands?'two hands':'right hand')+' \u00b7 '+
       noteLabel(Math.min(...ms))+'\u2013'+noteLabel(Math.max(...ms));
   }catch(e){ return 'Can\u2019t read this song'; }
@@ -1071,6 +1124,7 @@ function songButton(s){
 function renderLibrary(){
   document.querySelectorAll('#libLvl button').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.level===S.level)));
   $('#lvlTip').textContent=LVLTIP[S.level];
+  syncHandUI();
   const list=$('#songList'); list.innerHTML='';
   TIERS.forEach(tier=>{
     const songs=BUILTIN.filter(s=>s.tier===tier);
@@ -1092,7 +1146,7 @@ function renderLibrary(){
   });
 }
 function openSong(s){
-  let b; try{b=buildSong(s,S.level);}catch(e){return;}
+  let b; try{b=buildSong(s,S.level,S.leftHand);}catch(e){return;}
   S.song=s; S.notes=b.notes; S.len=b.len; S.groups=b.groups; S.bpb=s.bpb||4;
   $('#pTitle').textContent=s.title;
   $('#library').hidden=true; $('#practice').hidden=false;
@@ -1113,6 +1167,8 @@ $('#restartBtn').addEventListener('click',reset);
 $('#micBtn').addEventListener('click',()=>{ ensureCtx(); stream?stopMic():startMic(); });
 document.querySelectorAll('.seg button').forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.mode)));
 document.querySelectorAll('.lvl button').forEach(b=>b.addEventListener('click',()=>setLevel(b.dataset.level)));
+$('#pHand').addEventListener('input',e=>setLeftHand(HAND_VALS[+e.target.value]));
+$('#libHand').addEventListener('input',e=>setLeftHand(HAND_VALS[+e.target.value]));
 
 /* Read mode has no keyboard, so the letter pad is how she answers without a piano. */
 let sharpOn=false;

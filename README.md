@@ -50,27 +50,55 @@ node -e "const h=require('http'),f=require('fs');h.createServer((q,s)=>{s.writeH
 
 ---
 
-## Difficulty levels
+## Difficulty levels and the left hand
 
-The selector appears both in the library and on the practice screen. It does not change
-the melody — it changes **how much of the left hand comes along**:
+These are **two separate controls**, each appearing in both the library and the practice
+screen. They used to be tangled together (difficulty used to be what added the left hand),
+which turned out to be a real design mistake: it meant the only way to get an easier melody
+was to also lose the left hand, and vice versa. They're now fully independent.
 
-| Level | Left hand | Built from |
+### Difficulty — simplifies the right-hand melody
+
+Difficulty never touches hand count. It only changes **the right-hand melody itself**:
+how many notes survive, and the default tempo.
+
+| Level | What happens to `rh` | Default tempo |
 | --- | --- | --- |
-| **Easy** | none — right hand only | `rh` |
-| **Medium** | one held root note per bar | `chords`, root only |
-| **Hard** | a moving broken-chord part, one note per beat | `chords`, root–fifth–third–fifth |
+| **Easy** | kept only on whole beats; anything finer is dropped | 75% of the song's `bpm` |
+| **Medium** | kept down to the half-beat; only the busiest spots are thinned | 90% |
+| **Hard** | every note exactly as written | 100% |
+
+The simplification (`simplifyRH()`) works by keeping notes that start on the level's beat
+grid and dropping the rest — the note *before* a dropped note is held longer to cover the
+gap, so no pitch is ever invented, busy passages are just thinned out. A note that happens
+to repeat a pitch (like the eighth-note pairs in Hot Cross Buns) collapses cleanly into one
+held note; a genuine passing tone on an off-beat gets smoothed away, same as a real "easy"
+arrangement in a method book would do. The song's total length and the left hand's timing
+are never affected — only which right-hand notes survive.
+
+### Left hand — a slider, not a difficulty
+
+A range slider (3 steps: **Off / Simple / Full**) controls whether a left hand plays at
+all, independent of difficulty:
+
+| Setting | Left hand | Built from |
+| --- | --- | --- |
+| **Off** | none — right hand only | — |
+| **Simple** | one held root note per bar | `chords`, root only |
+| **Full** | a moving broken-chord part, one note per beat | `chords`, root–fifth–third–fifth |
 
 Left-hand notes are drawn **blue**, right-hand notes red, so she can see which hand owns
 what. The left hand is voiced from C3 upward (`BASS = 48`), and a chord seventh is placed
-*below* the root so the hand never has to stretch past a sixth.
+*below* the root so the hand never has to stretch past a sixth. In Learn and Read mode
+every note of a chord must be played before the song moves on — that is what makes Simple
+and Full genuinely two-handed practice rather than a melody with decoration.
 
-In Learn and Read mode every note of a chord must be played before the song moves on —
-that is what makes Medium and Hard genuinely two-handed practice rather than a melody with
-decoration.
+A song with no `chords` field stays right-hand-only no matter where the slider is set; it
+greys out and the hint line says why.
 
-A song with no `chords` field stays right-hand-only at every level; the Medium and Hard
-buttons grey out and the hint line says why.
+Best scores are tracked per song **and** per mode, difficulty, *and* left-hand setting
+(`songId_mode_level_leftHand`), since "Easy, no left hand" and "Easy, full left hand" are
+genuinely different challenges and shouldn't share a high score.
 
 ---
 
@@ -79,8 +107,8 @@ buttons grey out and the hint line says why.
 The mic hears through a single pitch tracker (the McLeod Pitch Method, in the
 `pitch detection` section of `index.html`), which can only follow **one** note at a time.
 That matters most for the very common case of two hands playing the **same letter an
-octave apart** — a scale practiced hands-together, or a Hard-mode left hand that happens
-to land on the same note name as the melody.
+octave apart** — a scale practiced hands-together, or a Full left hand that happens to
+land on the same note name as the melody.
 
 Acoustically, that case is a dead end for pitch detection: a note and its own octave,
 played together, produce a sound wave with *no periodicity the lower note doesn't already
@@ -215,7 +243,7 @@ Search for these banner comments in `index.html`:
 | `LIBRARY` / `PRACTICE` / `RESULTS` / `SETTINGS` / `ADD SONG` | The five chunks of markup. Only one of library/practice is visible at a time. |
 | `storage (optional)` | `store.get/set`, wrapped in try/catch so private-mode browsers still work. |
 | `songs` | `TIERS` and the `BUILTIN` table. |
-| `chords -> left hand` | `parseChords`, `buildLH`, `buildSong` — the difficulty engine. |
+| `chords -> left hand` | `parseChords`, `buildLH` (the left-hand generator), `simplifyRH` (the difficulty engine), `buildSong` (combines both). |
 | `settings` / `state` | `settings` defaults and the single `S` state object. |
 | `audio` | Oscillator-based piano tone and the metronome click. |
 | `pitch detection` | The McLeod pitch method (`mpm`) plus `analyze()`, which decides when a note has actually been struck. The `/*MPM*/ … /*END*/` markers fence the algorithm itself. |
@@ -227,7 +255,8 @@ Search for these banner comments in `index.html`:
 
 Key state on `S`: `notes` (flat, sorted by start beat), `groups` (notes bundled by start
 beat, so chords are one unit), `gi` (which group Learn/Read is waiting on), `mode`,
-`level`, `t` (current position in beats).
+`level` (melody difficulty), `leftHand` (`'off'`/`'simple'`/`'full'`, independent of
+`level`), `t` (current position in beats).
 
 ---
 
@@ -239,8 +268,8 @@ Everything is in `localStorage` under a `pianocoach_` prefix:
 | --- | --- |
 | `pianocoach_settings` | mic sensitivity, any-octave matching, key labels, metronome, mic delay, read-mode letter names |
 | `pianocoach_songs` | songs added through the Add song sheet |
-| `pianocoach_best` | best score per `songId_mode_level`, e.g. `twinkle_play_hard` |
-| `pianocoach_mode`, `pianocoach_level`, `pianocoach_tempo` | last used |
+| `pianocoach_best` | best score per `songId_mode_level_leftHand`, e.g. `twinkle_play_hard_full` |
+| `pianocoach_mode`, `pianocoach_level`, `pianocoach_leftHand`, `pianocoach_tempo` | last used |
 
 Two settings matter most when something feels wrong:
 
@@ -272,8 +301,13 @@ for(const s of m.BUILTIN){
 
 **Whole app** — the page script can also be run against a stubbed DOM and canvas (fake
 `document.querySelector`, a proxy for the 2D context, a manual `requestAnimationFrame`
-queue) to play every song in every mode at every level and catch runtime errors. That is
-how this version was checked.
+queue) to play every song in every mode, at every difficulty, with the left hand on `full`,
+and catch runtime errors; a second, smaller sweep checks a few representative songs across
+all three `leftHand` settings to confirm it's a genuinely independent axis (including that
+a song with no `chords` stays one-handed regardless of the slider). That is how this
+version was checked. The same harness also directly checks `simplifyRH()`: that a dropped
+note's duration is absorbed into the note before it (no lost time), and that `'hard'`
+changes nothing at all.
 
 **Pitch detection** — `mpm()` can be called directly from Node with a synthetic waveform
 (sum of a few sine harmonics, same shape as the app's own `tone()` synth) to check what it
@@ -307,5 +341,11 @@ microphone can only really be judged by eye and ear.
 * **Generated left hands are formulaic by design** — a root per bar, or a broken chord per
   beat. A song can be given a hand-written left-hand part instead by extending
   `buildSong()`; the hook is deliberately small.
+* **Difficulty simplifies rhythm, not pitch.** `simplifyRH()` only thins out note density —
+  it has no opinion about accidentals or hand position. A piece like Chromatic Climb (one
+  note per beat throughout) has nothing for Easy/Medium to simplify, since its difficulty
+  comes entirely from the notes themselves, not the rhythm. That's an intentional scope
+  limit, not a bug: changing *which pitches* appear would stop it being a simplified
+  version of the same tune.
 * Nice next steps: key signatures instead of per-note sharps, a rhythm-only drill, MIDI
   keyboard input via Web MIDI, and marking individual songs as "needs work".
