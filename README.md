@@ -157,34 +157,51 @@ For one-off or personal songs there is no need to touch the code at all — the
 **+ Add your own song** button in the library takes a title, a bpm, the notes and an
 optional chord track, and stores it in the browser under *My songs*.
 
-A few library entries (Disney tunes, the two Star Wars themes) are **simplified personal
-arrangements** of well-known melodies, not verbatim transcriptions — they're there for
-this family's practice, not for publishing or distributing. Their titles say
-"(simplified)" to keep that honest; keep that label on anything similar you add.
+### A warning about transcribing real, modern songs (read this before adding one)
 
-**When the song is a real, well-known piece, don't rely on memory alone for anything
-beyond public-domain nursery rhymes and standard classical repertoire** (Twinkle Twinkle,
-Für Elise, Minuet in G and the like are safe — they're extremely standard and were checked
-against well-established knowledge of them). For anything more specific — a modern pop or
-film song, a particular arrangement's chord changes — recalled-from-memory transcriptions
-of these are genuinely unreliable in ways that are easy to miss until someone who knows the
-song listens to it. The first pass at the Disney/Star Wars songs in this library had two
-real errors this way: the Star Wars Main Theme was written in the wrong meter (4/4 instead
-of the real 6/8) with the opening leap backwards, and Let It Go was missing the song's
-entire defining feature — the shift from a minor verse into the relative major for the
-chorus. Both were caught only when the person using the app said the songs "didn't sound
-right," not by any check this repo can run on its own.
+This library previously included simplified arrangements of several Disney and Star Wars
+songs, added by an AI assistant. They were wrong, in two separate attempts, and were
+removed. This is worth recording so it isn't repeated:
 
-Before adding or trusting a transcription of a real song beyond simple public-domain
-tunes, look up (don't just recall) at least: the **key**, the **time signature**, and a
-plain-language description of the melody's shape for the part you're transcribing (rising
-or falling, stepwise or leaping, where the memorable/structural moment is). Music-theory
-analysis sites and Wikipedia-style articles are good for this — they describe the music
-analytically rather than reproducing a copyrighted transcription outright, which also
-keeps this closer to "an arrangement informed by analysis" than "a copy of someone else's
-sheet music." Then write your own note sequence from that, rather than copying a found
-tab/transcription verbatim. If you can't verify these basics, say so in the song's title or
-a comment rather than shipping a guess as if it were checked.
+- **Attempt 1** transcribed the melodies from memory alone. The user reported the results
+  as unrecognizable.
+- **Attempt 2** added web research first — looking up each song's key, time signature, and
+  a plain-language description of its melodic shape — then rewrote the melodies informed
+  by those facts. This caught and fixed two real, confirmable errors (the Star Wars Main
+  Theme was in the wrong meter with the opening leap backwards; Let It Go was missing the
+  minor-verse/relative-major-chorus shift that defines the song). The user reported the
+  results as *still* unrecognizable.
+- A further attempt to find an exact, mechanically-copyable note sequence (rather than
+  reconstructing one) also failed: kalimba/diatonic-instrument tabs turned out to force
+  minor-key pieces into a different major-key simplification entirely, and sites with
+  accurate note-by-note data (e.g. Hooktheory) render it in an interactive view that a
+  text-based fetch can't read.
+
+**The root cause: an AI assistant without the ability to listen to its own output cannot
+reliably transcribe a specific recorded song beyond simple public-domain material**, no
+matter how much textual research backs it up. Textual facts (key, meter, "leaps a fifth
+then descends") under-specify a melody enough that the gaps still get filled from
+unreliable memory, and there's no way to self-check the result against what the song
+actually sounds like.
+
+**What *is* safe**, demonstrated by what's actually in this library and held up without
+correction: standard nursery rhymes and rounds (Twinkle Twinkle, Hot Cross Buns, Frère
+Jacques, Three Blind Mice, Old MacDonald, ...) and famous classical repertoire (Ode to Joy,
+Für Elise, Minuet in G) that are taught so uniformly, everywhere, that there's effectively
+one canonical version to get right. Also safe: reusing a melody already in this file that's
+known to be correct — several children's songs genuinely share a tune (Twinkle Twinkle /
+Baa Baa Black Sheep / The Alphabet Song are the same melody; Mary Had a Little Lamb /
+Merrily We Roll Along are commonly the same tune too), so a second title using an
+already-verified `rh` string costs nothing in risk. And always safe: original technical
+exercises (scales, arpeggios, interval drills) that aren't a transcription of anything, so
+there's no "is this really how it goes" question to get wrong in the first place.
+
+**If asked to add a modern pop or film song**, don't attempt a from-scratch transcription
+the way the removed ones were done. Instead: say plainly that this is a known weak spot,
+and either (a) ask the person adding it to supply or confirm the actual notes (they have
+ears; you may not), or (b) stick to the "same tune, different title" trick and the
+public-domain/original-exercise categories above. Shipping a guess as if it were checked is
+worse than saying it's unverified.
 
 ---
 
