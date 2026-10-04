@@ -162,6 +162,30 @@ arrangements** of well-known melodies, not verbatim transcriptions — they're t
 this family's practice, not for publishing or distributing. Their titles say
 "(simplified)" to keep that honest; keep that label on anything similar you add.
 
+**When the song is a real, well-known piece, don't rely on memory alone for anything
+beyond public-domain nursery rhymes and standard classical repertoire** (Twinkle Twinkle,
+Für Elise, Minuet in G and the like are safe — they're extremely standard and were checked
+against well-established knowledge of them). For anything more specific — a modern pop or
+film song, a particular arrangement's chord changes — recalled-from-memory transcriptions
+of these are genuinely unreliable in ways that are easy to miss until someone who knows the
+song listens to it. The first pass at the Disney/Star Wars songs in this library had two
+real errors this way: the Star Wars Main Theme was written in the wrong meter (4/4 instead
+of the real 6/8) with the opening leap backwards, and Let It Go was missing the song's
+entire defining feature — the shift from a minor verse into the relative major for the
+chorus. Both were caught only when the person using the app said the songs "didn't sound
+right," not by any check this repo can run on its own.
+
+Before adding or trusting a transcription of a real song beyond simple public-domain
+tunes, look up (don't just recall) at least: the **key**, the **time signature**, and a
+plain-language description of the melody's shape for the part you're transcribing (rising
+or falling, stepwise or leaping, where the memorable/structural moment is). Music-theory
+analysis sites and Wikipedia-style articles are good for this — they describe the music
+analytically rather than reproducing a copyrighted transcription outright, which also
+keeps this closer to "an arrangement informed by analysis" than "a copy of someone else's
+sheet music." Then write your own note sequence from that, rather than copying a found
+tab/transcription verbatim. If you can't verify these basics, say so in the song's title or
+a comment rather than shipping a guess as if it were checked.
+
 ---
 
 ## How the file is laid out
