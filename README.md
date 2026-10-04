@@ -212,10 +212,18 @@ to show the melody, and reading the piano-roll grid *visually* (screenshots + zo
 same way a person would look at sheet music) gives real key/meter/chord-progression facts
 directly, plus a trustworthy melodic *contour* (which notes are held, which are short,
 roughly which scale degrees) — far more constraining than a prose description, without
-being a mechanical bulk-copy of someone's exact transcription. The Star Wars and Let It Go
-entries now in this library were built this way: Star Wars's corrected 6/8 meter and
-up-a-fifth opening leap, and Let It Go's confirmed Ab major / I–V–vi–IV chorus and
-repeated-note verse, were both read directly off the piano-roll, not recalled or guessed.
+being a mechanical bulk-copy of someone's exact transcription. The Disney/Star Wars entries
+now in this library were built this way, each checked directly on Hooktheory's piano-roll
+rather than recalled or guessed: Star Wars Main Theme's 6/8 meter and up-a-fifth opening
+leap; Let It Go's Ab major / I–V–vi–IV chorus and repeated-note verse (its traced melody
+range matched Hooktheory's own cited stat exactly); A Whole New World's D major key and its
+"whole new world" hook actually descending stepwise (not leaping, as guessed before); Beauty
+and the Beast's straight 4/4 (confirming the earlier 3/4-waltz version was simply wrong —
+the waltz is a separate instrumental cue in the 2017 remake); and When You Wish Upon a
+Star's confirmed opening octave leap landing on a held G4, matching the independently
+sourced fact that an octave leap is the song's signature move. Hakuna Matata and You've Got
+a Friend in Me were also checked this way and found to already match (key, meter, range,
+melodic character) what was already written, so those were left unchanged.
 The difference from attempt 3's text-extraction failures is specifically that this means
 *looking once and writing a new, simplified interpretation* (different rhythm, different
 key choices in places, fewer notes) — the same thing a student does after hearing a song a
