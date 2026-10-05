@@ -240,9 +240,21 @@ range matched Hooktheory's own cited stat exactly); A Whole New World's D major 
 and the Beast's straight 4/4 (confirming the earlier 3/4-waltz version was simply wrong —
 the waltz is a separate instrumental cue in the 2017 remake); and When You Wish Upon a
 Star's confirmed opening octave leap landing on a held G4, matching the independently
-sourced fact that an octave leap is the song's signature move. Hakuna Matata and You've Got
-a Friend in Me were also checked this way and found to already match (key, meter, range,
-melodic character) what was already written, so those were left unchanged.
+sourced fact that an octave leap is the song's signature move. It's a Small World and
+Heigh-Ho were both confirmed in **G major** (a guessed C major was simply the wrong key,
+though the already-written melodic shapes — simple/repetitive, and a low repeated-note
+chant — held up and were transposed rather than re-guessed); The Imperial March's G minor,
+4/4, 104bpm were re-confirmed, backing up its already-correct 9-note motif from an earlier
+session's independent cross-check. Hakuna Matata and You've Got a Friend in Me were also
+checked this way and found to already match (key, meter, range, melodic character) what was
+already written, so those were left unchanged.
+
+Two of these (Hakuna Matata, You've Got a Friend in Me) were verified as correct in an
+earlier pass but then not actually carried over when the library was edited afterward — an
+oversight caught only when auditing the full song list for an unrelated change. Worth
+remembering: "verified" is not the same as "shipped" — after checking a song, confirm it is
+still present in `BUILTIN` before moving on, the same way the beat-math check would catch
+a different kind of slip.
 The difference from attempt 3's text-extraction failures is specifically that this means
 *looking once and writing a new, simplified interpretation* (different rhythm, different
 key choices in places, fewer notes) — the same thing a student does after hearing a song a
