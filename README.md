@@ -67,21 +67,22 @@ a long list — cosmetic, not functional.
 
 ## Difficulty levels and the left hand
 
-These are **two separate controls**, each appearing in both the library and the practice
-screen. They used to be tangled together (difficulty used to be what added the left hand),
-which turned out to be a real design mistake: it meant the only way to get an easier melody
-was to also lose the left hand, and vice versa. They're now fully independent.
+These are **three independent axes** — difficulty, left hand, and speed — each appearing
+in both the library and the practice screen (speed only on the practice screen, since it's
+a live performance control). None of the three implies either of the others.
 
-### Difficulty — simplifies the right-hand melody
+### Difficulty — simplifies the right-hand melody, never the tempo
 
-Difficulty never touches hand count. It only changes **the right-hand melody itself**:
-how many notes survive, and the default tempo.
+Difficulty changes **how many of the right-hand melody's notes survive** — nothing else.
+It has no opinion on speed (that is only ever the tempo `−`/`+` buttons, `S.tempo`,
+completely independent of `S.level`) and no opinion on hand count (that is `leftHand`,
+below). Selecting a level never changes the tempo you had dialed in.
 
-| Level | What happens to `rh` | Default tempo |
-| --- | --- | --- |
-| **Easy** | kept only on whole beats; anything finer is dropped | 75% of the song's `bpm` |
-| **Medium** | kept down to the half-beat; only the busiest spots are thinned | 90% |
-| **Hard** | every note exactly as written | 100% |
+| Level | What happens to `rh` |
+| --- | --- |
+| **Easy** | kept only on whole beats; anything finer is dropped |
+| **Medium** | kept down to the half-beat; only the busiest spots are thinned |
+| **Hard** | every note, exactly as written — the real, full song |
 
 The simplification (`simplifyRH()`) works by keeping notes that start on the level's beat
 grid and dropping the rest — the note *before* a dropped note is held longer to cover the
@@ -90,6 +91,18 @@ to repeat a pitch (like the eighth-note pairs in Hot Cross Buns) collapses clean
 held note; a genuine passing tone on an off-beat gets smoothed away, same as a real "easy"
 arrangement in a method book would do. The song's total length and the left hand's timing
 are never affected — only which right-hand notes survive.
+
+This went through two earlier iterations before landing here, both based on a
+misunderstanding worth recording: the first had difficulty set a default tempo too
+(70/90/100%, baked into `bpm()`); the person using the app said no — speed is already a
+separate, always-available control (the `−`/`+` buttons), and tying it to difficulty just
+means re-adjusting speed every time you change difficulty. The second iteration, reacting
+to that, went too far the other way and removed `simplifyRH()` entirely so every level
+played identical, full notes — at which point it emerged that **removing the simplification
+was never the ask**; what was wanted was for speed and difficulty to stop being entangled,
+with difficulty kept as a genuine simplification (Hard = full song) and speed left
+completely alone. If this surfaces again: difficulty picks *which notes*, the tempo
+buttons pick *how fast*, and the two must never set each other.
 
 ### Left hand — its own control, not a difficulty
 
@@ -348,10 +361,12 @@ for(const s of m.BUILTIN){
 queue) to play every song in every mode, at every difficulty, with the left hand on `full`,
 and catch runtime errors; a second, smaller sweep checks a few representative songs across
 all three `leftHand` settings to confirm it's a genuinely independent axis (including that
-a song with no `chords` stays one-handed regardless of the slider). That is how this
+a song with no `chords` stays one-handed regardless of the setting). That is how this
 version was checked. The same harness also directly checks `simplifyRH()`: that a dropped
 note's duration is absorbed into the note before it (no lost time), and that `'hard'`
-changes nothing at all.
+changes nothing at all — and separately checks that `setLevel()` never touches `S.tempo`,
+by setting an arbitrary tempo, cycling through all three levels, and confirming it never
+moves.
 
 **Pitch detection** — `mpm()` can be called directly from Node with a synthetic waveform
 (sum of a few sine harmonics, same shape as the app's own `tone()` synth) to check what it
