@@ -24,6 +24,21 @@ node -e "const h=require('http'),f=require('fs');h.createServer((q,s)=>{s.writeH
 
 ---
 
+## Finding a song
+
+The library has a search box (`#librarySearch`) right at the top, above the difficulty
+picker, so a returning player can jump straight to a song by typing part of its title —
+including a franchise name, since titles keep it in parentheses (typing "frozen" finds
+"Let It Go (Frozen...)"). It filters both the built-in list and "My songs" live, hides a
+difficulty-tier heading entirely if nothing in it matches, and shows a plain "no songs
+match" message if the search comes up empty. This was added once the library grew past
+about three dozen songs, at which point scrolling through three tier headers to find one
+title stopped being the fastest way to get to a song. A few of the Disney/Star Wars titles
+also carry a small emoji (⭐, ❄️, 🦁, ...) purely so they're easier to spot at a glance in
+a long list — cosmetic, not functional.
+
+---
+
 ## The four modes
 
 | Mode | What happens | Scored on |
@@ -76,10 +91,14 @@ held note; a genuine passing tone on an off-beat gets smoothed away, same as a r
 arrangement in a method book would do. The song's total length and the left hand's timing
 are never affected — only which right-hand notes survive.
 
-### Left hand — a slider, not a difficulty
+### Left hand — its own control, not a difficulty
 
-A range slider (3 steps: **Off / Simple / Full**) controls whether a left hand plays at
-all, independent of difficulty:
+A three-button row (**Off / Simple / Full**) controls whether a left hand plays at all,
+independent of difficulty. This used to be a range slider; it was changed to big tappable
+buttons (the same `.lvl` style the difficulty picker already uses) because a slider is
+genuinely harder for a small finger to land precisely on one of three positions than a
+button is to just tap — a concrete usability fix for the app's actual users, not a
+cosmetic one.
 
 | Setting | Left hand | Built from |
 | --- | --- | --- |

@@ -132,11 +132,16 @@ label.field textarea{font-family:ui-monospace,Menlo,Consolas,monospace;font-size
 .setting > div{min-width:0}
 .setting p{margin:2px 0 0;font-size:.82rem;color:var(--muted)}
 .setting input[type=range]{width:140px;accent-color:var(--accent)}
-.handrow{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px 14px}
-.handrow .lbl2{font-weight:700;font-size:.92rem;min-width:0}
-.handrow .lbl2 small{display:block;font-weight:400;color:var(--muted);font-size:.78rem;margin-top:1px}
-.handrow input[type=range]{flex:none;width:130px;accent-color:var(--accent);margin:0 2px}
-.handrow input[type=range]:disabled{opacity:.4}
+.handrow{display:flex;flex-direction:column;gap:6px}
+.handrow .lbl2{font-weight:700;font-size:.92rem}
+.handrow .lvl button:disabled{opacity:.4}
+.search{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px 6px 4px 16px}
+.search input{flex:1;min-width:0;border:0;background:transparent;color:var(--ink);font:inherit;font-size:1rem;padding:8px 0}
+.search input::placeholder{color:var(--muted)}
+.search input:focus{outline:0}
+.search button{flex:none;width:34px;height:34px;border:0;border-radius:50%;background:var(--lane);color:var(--muted);font-size:1.1rem;line-height:1}
+.no-results{display:none;text-align:center;color:var(--muted);padding:18px 12px;font-size:.92rem}
+.no-results.show{display:block}
 .setting input[type=checkbox]{width:24px;height:24px;accent-color:var(--accent);flex:none}
 .val{font-variant-numeric:tabular-nums;color:var(--muted);font-size:.85rem}
 /* ---------- Difficulty + reading pad ---------- */
@@ -171,6 +176,10 @@ label.field textarea{font-family:ui-monospace,Menlo,Consolas,monospace;font-size
   </div>
   <p class="lede">Pick a difficulty and whether to add the left hand, then pick a song. <strong>Learn</strong> waits on each note, <strong>Play</strong> keeps the beat and scores you, <strong>Read</strong> shows real sheet music with no keyboard, and <strong>Listen</strong> plays the tune first.</p>
   <div class="tip" id="secureTip" hidden><strong>Microphone is off on this page.</strong> Phones only allow the mic on a secure (https) web address. You can still tap the keys on screen to try everything out.</div>
+  <label class="search"><span aria-hidden="true">🔍</span>
+    <input type="search" id="librarySearch" placeholder="Search songs…" aria-label="Search songs" autocomplete="off">
+    <button type="button" id="searchClear" aria-label="Clear search" hidden>✕</button>
+  </label>
   <div class="lib-lvl">
     <p class="section-label">Difficulty</p>
     <div class="lvl" id="libLvl" role="tablist">
@@ -180,11 +189,16 @@ label.field textarea{font-family:ui-monospace,Menlo,Consolas,monospace;font-size
     </div>
     <p class="tip" id="lvlTip"></p>
     <div class="handrow">
-      <span class="lbl2">Left hand<small id="libHandSub">Off — melody only</small></span>
-      <input type="range" id="libHand" min="0" max="2" step="1" value="0" aria-label="Left hand amount">
+      <span class="lbl2">Left hand</span>
+      <div class="lvl" id="libHand" role="tablist">
+        <button role="tab" data-hand="off" aria-selected="true">Off<small>Melody only</small></button>
+        <button role="tab" data-hand="simple" aria-selected="false">Simple<small>One note a bar</small></button>
+        <button role="tab" data-hand="full" aria-selected="false">Full<small>Moving part</small></button>
+      </div>
     </div>
   </div>
   <div class="songs" id="songList"></div>
+  <p class="no-results" id="noResults">No songs match <span id="noResultsQuery"></span>.</p>
   <p class="section-label" id="myLabel" hidden>My songs</p>
   <div class="songs" id="mySongs"></div>
   <button class="add" id="addSongBtn">+ Add your own song</button>
@@ -232,7 +246,11 @@ label.field textarea{font-family:ui-monospace,Menlo,Consolas,monospace;font-size
     </div>
     <div class="handrow">
       <span class="lbl2">Left hand<small id="pHandSub">Off — melody only</small></span>
-      <input type="range" id="pHand" min="0" max="2" step="1" value="0" aria-label="Left hand amount">
+      <div class="lvl" id="pHand" role="tablist">
+        <button role="tab" data-hand="off" aria-selected="true">Off</button>
+        <button role="tab" data-hand="simple" aria-selected="false">Simple</button>
+        <button role="tab" data-hand="full" aria-selected="false">Full</button>
+      </div>
     </div>
     <div class="row">
       <div class="tempo"><button id="slower" aria-label="Slower">−</button><span id="tempoVal">100%<small>speed</small></span><button id="faster" aria-label="Faster">+</button></div>
@@ -375,7 +393,10 @@ const BUILTIN=[
   {id:'lhwalk',title:'Left-Hand Walk',tier:'Beginner',bpm:80,bpb:4,
    rh:'G4:4 G4:4 A4:4 G4:4 F4:4 E4:4 D4:4 C4:4',
    chords:'C:4 C:4 F:4 C:4 F:4 C:4 G7:4 C:4'},
-  {id:'beauty',title:'Beauty and the Beast (simplified)',tier:'Beginner',bpm:91,bpb:4,
+  {id:'friendinme',title:"🤠 You've Got a Friend in Me (Toy Story, simplified)",tier:'Beginner',bpm:104,bpb:4,
+   rh:'D4 D4 D4 E4 F#4 G4:2 E4 D4 D4 C4 B3 A3:4 D4 E4 F#4 G4 A4 G4:2 F#4 E4 D4 C4 B3 G4:4',
+   chords:'G:4 D:4 Em:4 C:4 G:4 D:4 Em:4 C:4'},
+  {id:'beauty',title:'🌹 Beauty and the Beast (simplified)',tier:'Beginner',bpm:91,bpb:4,
    rh:'Db4 Eb4 F4 Gb4 F4 Eb4 Db4:2 F4 Gb4 Ab4 Bb4 Ab4:4 F4 Gb4 Ab4 Bb4 C5 Bb4 Ab4:2 Gb4 F4 Eb4:2 Db4:4',
    chords:'Db:4 Ab:4 Db:4 Gb:4 Db:4 Ab7:4 Db:4 Db:4'},
   {id:'fscale',title:'F Major Scale',tier:'Beginner',bpm:72,bpb:4,
@@ -416,18 +437,21 @@ const BUILTIN=[
   {id:'octaves',title:'Octave Jumps',tier:'Intermediate',bpm:84,bpb:4,
    rh:'C4 C5 D4 D5 E4 E5 F4 F5 G4 G5 G4 G5 F4 F5 E4 E5 D4 D5 C4 C5:2',
    chords:'C:2 D:2 E:2 F:2 G:2 G:2 F:2 E:2 D:2 C:3'},
-  {id:'swmain',title:'Star Wars (Main Theme, simplified)',tier:'Intermediate',bpm:116,bpb:3,
+  {id:'swmain',title:'⭐ Star Wars (Main Theme, simplified)',tier:'Intermediate',bpm:116,bpb:3,
    rh:'C4:3 G4:3 F4:1.5 E4:1.5 C5:3 G4:3 F4:1.5 E4:1.5 C4:6',
    chords:'C:3 C:3 G:3 C:3 C:3 G:3 C:6'},
-  {id:'letitgo',title:'Let It Go (Frozen, simplified)',tier:'Intermediate',bpm:112,bpb:4,
+  {id:'letitgo',title:'❄️ Let It Go (Frozen, simplified)',tier:'Intermediate',bpm:112,bpb:4,
    rh:'Ab3 Ab3 Ab3 Ab3 Bb3 Ab3 G3 Ab3 Ab3 Ab3 Ab3 Ab3 Bb3 Ab3:2 G3 F4 G4 Ab4 G4 Ab4 Bb4 C5 Bb4 C5 Db5 Eb5:2 C5 Bb4 Ab4:2',
    chords:'Fm:4 Db:4 Fm:4 Eb:4 Ab:4 Eb:4 Fm:4 Db:4'},
-  {id:'newworld',title:'A Whole New World (Aladdin, simplified)',tier:'Intermediate',bpm:108,bpb:4,
+  {id:'newworld',title:'🧞 A Whole New World (Aladdin, simplified)',tier:'Intermediate',bpm:108,bpb:4,
    rh:'G4 F#4 E4:2 A3:2 B3 C#4 G4 F#4 E4 D4 E4:4 A4:2 G4:2 G4 F#4 E4:2 A4:2 G4:2 F#4 E4 D4:2',
    chords:'D:4 A:4 Bm:4 G:4 D:4 A:4 Bm:4 G:4'},
-  {id:'wishstar',title:'When You Wish Upon a Star (simplified)',tier:'Intermediate',bpm:92,bpb:4,
+  {id:'wishstar',title:'🌟 When You Wish Upon a Star (simplified)',tier:'Intermediate',bpm:92,bpb:4,
    rh:'G3 G4:3 A4 G4 F4:2 G4 A4 G4 F4 E4:4 G3 G4:3 A4 B4 C5:2 B4 A4 G4 F4 C4:4',
-   chords:'C:4 G7:4 C:4 C:4 C:4 G7:4 C:4 C:4'}
+   chords:'C:4 G7:4 C:4 C:4 C:4 G7:4 C:4 C:4'},
+  {id:'hakuna',title:'🦁 Hakuna Matata (Lion King, simplified)',tier:'Intermediate',bpm:92,bpb:4,
+   rh:'C4 C4 D4 E4 F4:0.5 G4:0.5 F4 E4 D4 C4 C4 D4 E4 D4:2 C4:2 E4 E4 F4 G4 A4:0.5 G4:0.5 F4 E4 D4 C4 E4 G4 E4 C4:4',
+   chords:'C:4 F:4 C:4 G7:4 C:4 F:4 G7:4 C:4'}
 ];
 let custom=store.get('songs',[]);
 
@@ -1015,15 +1039,11 @@ const LVLNAME={easy:'Easy',medium:'Medium',hard:'Hard'};
 const LVLTIP={easy:'Easy \u2014 slower, and the trickiest little notes are smoothed into longer, simpler ones.',
   medium:'Medium \u2014 normal speed, with just the busiest spots smoothed out.',
   hard:'Hard \u2014 full speed, every note exactly as written.'};
-const HAND_VALS=['off','simple','full'];
 const HANDTIP={off:'Off \u2014 right hand melody only.',
   simple:'Simple \u2014 adds one held left-hand note per bar.',
   full:'Full \u2014 adds a moving left-hand part. Blue notes belong to the left hand.'};
 function syncHandUI(){
-  const idx=HAND_VALS.indexOf(S.leftHand);
-  const lib=$('#libHand'),pr=$('#pHand');
-  if(lib) lib.value=idx; if(pr) pr.value=idx;
-  if($('#libHandSub')) $('#libHandSub').textContent=HANDTIP[S.leftHand];
+  document.querySelectorAll('#libHand button, #pHand button').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.hand===S.leftHand)));
 }
 function showMsg(txt){ const m=$('#stageMsg'); m.textContent=txt; m.hidden=false; }
 function refreshStageMsg(){
@@ -1040,7 +1060,7 @@ function updateButtons(){
   document.querySelectorAll('.seg button').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.mode===S.mode)));
   document.querySelectorAll('#pLvl button').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.level===S.level)));
   const twoOK=!!(S.song&&S.song.chords);
-  $('#pHand').disabled=!twoOK;
+  document.querySelectorAll('#pHand button').forEach(b=>{ b.disabled=b.dataset.hand!=='off'&&!twoOK; });
   $('#pHandSub').textContent=twoOK?HANDTIP[S.leftHand]:'This song has no left-hand part yet.';
   syncHandUI();
   $('#pad').hidden=S.mode!=='read';
@@ -1136,20 +1156,25 @@ function songButton(s){
   b.append(t,r,m); b.addEventListener('click',()=>openSong(s));
   return b;
 }
+let searchQuery='';
+const matchesSearch=s=>!searchQuery||s.title.toLowerCase().includes(searchQuery);
 function renderLibrary(){
   document.querySelectorAll('#libLvl button').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.level===S.level)));
   $('#lvlTip').textContent=LVLTIP[S.level];
   syncHandUI();
   const list=$('#songList'); list.innerHTML='';
+  let shown=0;
   TIERS.forEach(tier=>{
-    const songs=BUILTIN.filter(s=>s.tier===tier);
+    const songs=BUILTIN.filter(s=>s.tier===tier&&matchesSearch(s));
     if(!songs.length) return;
     const h=document.createElement('p'); h.className='section-label'; h.textContent=tier;
     list.appendChild(h);
-    songs.forEach(s=>list.appendChild(songButton(s)));
+    songs.forEach(s=>{list.appendChild(songButton(s));shown++;});
   });
-  const mine=$('#mySongs'); mine.innerHTML=''; $('#myLabel').hidden=!custom.length;
-  custom.forEach(s=>{
+  const mine=$('#mySongs'); mine.innerHTML='';
+  const myMatches=custom.filter(matchesSearch);
+  $('#myLabel').hidden=!myMatches.length;
+  myMatches.forEach(s=>{
     const row=document.createElement('div'); row.className='song-row';
     const del=document.createElement('button'); del.className='del'; del.type='button'; del.textContent='Delete';
     let timer=null;
@@ -1157,8 +1182,10 @@ function renderLibrary(){
       if(!del.classList.contains('armed')){ del.classList.add('armed'); del.textContent='Sure?'; timer=setTimeout(()=>{del.classList.remove('armed');del.textContent='Delete';},3000); return; }
       clearTimeout(timer); custom=custom.filter(c=>c.id!==s.id); store.set('songs',custom); renderLibrary();
     });
-    row.append(songButton(s),del); mine.appendChild(row);
+    row.append(songButton(s),del); mine.appendChild(row); shown++;
   });
+  $('#noResults').classList.toggle('show',shown===0&&!!searchQuery);
+  $('#noResultsQuery').textContent=searchQuery?'“'+searchQuery+'”':'';
 }
 function openSong(s){
   let b; try{b=buildSong(s,S.level,S.leftHand);}catch(e){return;}
@@ -1182,8 +1209,7 @@ $('#restartBtn').addEventListener('click',reset);
 $('#micBtn').addEventListener('click',()=>{ ensureCtx(); stream?stopMic():startMic(); });
 document.querySelectorAll('.seg button').forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.mode)));
 document.querySelectorAll('.lvl button').forEach(b=>b.addEventListener('click',()=>setLevel(b.dataset.level)));
-$('#pHand').addEventListener('input',e=>setLeftHand(HAND_VALS[+e.target.value]));
-$('#libHand').addEventListener('input',e=>setLeftHand(HAND_VALS[+e.target.value]));
+document.querySelectorAll('#pHand button, #libHand button').forEach(b=>b.addEventListener('click',()=>setLeftHand(b.dataset.hand)));
 
 /* Read mode has no keyboard, so the letter pad is how she answers without a piano. */
 let sharpOn=false;
@@ -1240,6 +1266,16 @@ $('#setDelay').addEventListener('input',e=>{settings.delay=+e.target.value;saveS
 
 // add song
 $('#addSongBtn').addEventListener('click',()=>{ $('#newErr').textContent=''; openSheet('#addSheet'); $('#newTitle').focus(); });
+
+// search
+$('#librarySearch').addEventListener('input',e=>{
+  searchQuery=e.target.value.trim().toLowerCase();
+  $('#searchClear').hidden=!searchQuery;
+  renderLibrary();
+});
+$('#searchClear').addEventListener('click',()=>{
+  searchQuery=''; $('#librarySearch').value=''; $('#searchClear').hidden=true; renderLibrary(); $('#librarySearch').focus();
+});
 $('#saveSong').addEventListener('click',()=>{
   const title=$('#newTitle').value.trim(), bpmV=parseInt($('#newBpm').value,10),
         notes=$('#newNotes').value.trim(), chords=$('#newChords').value.trim();
